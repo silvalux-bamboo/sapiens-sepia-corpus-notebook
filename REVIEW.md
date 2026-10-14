@@ -2,7 +2,7 @@
 
 검수 브랜치: `feat/reader-interpretation-metaconsole`
 
-기준 커밋: `a3dbe741f3cd0acfcdf5def27bbc731adde5b739`. 사용자 검수 전 main 병합 및 GitHub Pages 배포를 하지 않는다.
+기준 커밋: `a3dbe741f3cd0acfcdf5def27bbc731adde5b739`. 사용자 승인 후에만 main 병합 및 기존 GitHub Pages 공개 반영을 진행한다.
 
 ## 변경 내용
 
@@ -61,3 +61,19 @@ jook / Windows / Edge 155.0.4283.45에서 합성 데이터 검수 28개 통과:
 `index.html` (기존 패치 유지, 줄바꿈 정규화 및 확장 코드 로드), `reader-console.js`, `reader-console.css`, `tools/prepare-review.cjs`, `tools/test-reader.cjs`, `.gitignore`, `REVIEW.md`.
 
 기존 `sepia-base-v5.1.html`은 수정하지 않았다.
+
+## 2026-10-14 저장 안전성 보완
+
+독립 검토에서 발견된 불량 주석 반입 및 다중 탭 덮어쓰기 문제를 보완했다.
+
+- 반입 전에 주석 ID, 버전, 시각, 출전, 근거, 구분, 검토·공유 상태의 중첩 타입과 허용값을 검사한다. 불량 주석이 하나라도 있으면 저장을 시작하지 않는다. 중복 주석 ID도 거부한다.
+- IndexedDB의 반입 전체를 하나의 쓰기 트랜잭션에 넣는다. 첫 put 이후 두 번째 put 실패를 주입하여 전체 원상복구를 확인했다.
+- 이미 저장된 비정상 주석은 안전한 안내로 격리한다. 유효한 주석과 정상 카드는 계속 표시하며 비정상 원본도 JSON 백업에 그대로 포함한다. 자동 삭제·수정하지 않는다.
+- 저장 트랜잭션 안에서 최신 원문 레코드를 읽고 주석 단위로 병합한다. 같은 주석은 편집 시작 시점의 사본과 비교하여 충돌을 감지한다. 서로 다른 주석 및 출전 보완은 함께 보존한다.
+- localStorage 대체 저장은 Web Locks로 직렬화한다. 탭 간 저장 통지가 반영되도록 잠금 안에서 읽기 전과 쓰기 후 작업 경계를 기다린다. Web Locks가 없으면 안전하지 않은 쓰기를 하지 않고 입력을 보존한다.
+
+Windows Edge의 새 임시 프로필에서 `node tools/test-storage-safety.cjs` 18개 검사와 기존 `node tools/test-reader.cjs` 28개 검사를 실행한다. 안전성 검사에는 각 저장 방식별 중첩 필드 13종과 중복 ID 거부, 불량 반입 후 새로고침, 기존 비정상 데이터 표시·백업, 동시 추가/동일 주석 충돌/서로 다른 주석 수정/출전과 주석 동시 변경, 각각 10회 반복 동시 추가, Web Locks 부재 시 저장 차단이 포함된다. 모든 테스트 데이터는 합성 데이터다.
+
+기준 main에는 검색 입력 UI가 없으며, 이번 수정에서 검색 기능을 제거하지 않았다. 기존 직접 기록·카드·행성·JSON 기능은 위 회귀 검수로 확인한다. macOS Safari·실제 iPad는 아직 별도 실기기 검수 대상이다. 다른 탭의 변경은 저장 또는 새로고침 시 최신 기록으로 읽으며 실시간 화면 동기화 기능은 추가하지 않았다. 이전 버전 코드가 열린 탭이나 외부 스크립트의 쓰기까지 보호하지는 않으므로 업데이트 후 기존 탭을 새로고침하여 사용한다.
+
+공개 URL은 `https://silvalux-bamboo.github.io/sapiens-sepia-corpus-notebook/`이다. 변경 전 HTTP 200과 main의 `pages build and deployment` 성공 이력을 확인했다. 비인증 Pages 설정 API 조회는 404여서 설정 화면 자체는 확인하지 못했으며, 기존 배포 설정은 변경하지 않는다.
