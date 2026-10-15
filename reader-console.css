@@ -1,4 +1,12 @@
 /* Reader interpretations: additive schema, native keyboard controls. */
+.dictionary-panel{border:1px solid var(--cyan);border-radius:18px;padding:20px;margin-bottom:22px;background:#081a16}
+.dictionary-panel h2{margin:0 0 8px;font-size:1.2rem;color:var(--cyan)}
+.dictionary-panel p{margin:8px 0;line-height:1.65;color:var(--muted)}
+.dictionary-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(180px,.55fr) auto;gap:12px;align-items:end;margin-top:15px}
+.dictionary-form label{font-size:.88rem;color:var(--lime2);min-width:0}
+.dictionary-form input,.dictionary-form select{display:block;width:100%;box-sizing:border-box;min-height:46px;margin-top:7px;padding:10px 12px;border:1px solid #587365;border-radius:10px;background:#04100c;color:var(--text);font:inherit}
+.dictionary-form .btn{min-height:46px}.dictionary-help{font-size:.83rem}.dictionary-result{display:inline-block;color:var(--cyan);padding:10px 0;min-height:24px}.dictionary-result[hidden]{display:none}
+@media(max-width:720px){.dictionary-form{grid-template-columns:1fr}.dictionary-panel{padding:16px}}
 :focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
 .reader-console{border-top:1px solid var(--line);margin-top:18px;padding-top:16px}
 .reader-console h3{font-size:1rem;margin:0 0 8px;color:var(--lime2)}
