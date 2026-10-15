@@ -77,3 +77,17 @@ Windows Edge의 새 임시 프로필에서 `node tools/test-storage-safety.cjs` 
 기준 main에는 검색 입력 UI가 없으며, 이번 수정에서 검색 기능을 제거하지 않았다. 기존 직접 기록·카드·행성·JSON 기능은 위 회귀 검수로 확인한다. macOS Safari·실제 iPad는 아직 별도 실기기 검수 대상이다. 다른 탭의 변경은 저장 또는 새로고침 시 최신 기록으로 읽으며 실시간 화면 동기화 기능은 추가하지 않았다. 이전 버전 코드가 열린 탭이나 외부 스크립트의 쓰기까지 보호하지는 않으므로 업데이트 후 기존 탭을 새로고침하여 사용한다.
 
 공개 URL은 `https://silvalux-bamboo.github.io/sapiens-sepia-corpus-notebook/`이다. 변경 전 HTTP 200과 main의 `pages build and deployment` 성공 이력을 확인했다. 비인증 Pages 설정 API 조회는 404여서 설정 화면 자체는 확인하지 못했으며, 기존 배포 설정은 변경하지 않는다.
+
+## 2026-10-15 개념어 사전 연결 (별도 브랜치)
+
+`feat/concept-dictionary-search`에서 포집창 위에 **개념어의 한자·뜻 찾기**를 추가했다. 한글 개념어와 검색할 사전을 고르고 ‘사전 검색 ↗’ 또는 Enter를 누르면 공식 검색 결과를 새 탭으로 연다. 기본은 표준국어대사전이며 우리말샘도 선택할 수 있다.
+
+예: `성리` 입력 → `우리말샘` 선택 → `사전 검색 ↗` → 검색 결과에서 `性理`와 뜻·용례를 확인한다. 동음이의어의 한자를 자동 확정하거나 입력 기록에 자동 반영하지 않는다. 결과를 앱 안에 표시하는 기능은 없다.
+
+표준국어대사전은 `/search/searchResult.do?pageSize=10&searchKeyword=...`, 우리말샘은 `/search/searchResult?query=...`를 사용한다. 검색어를 `URLSearchParams`로 인코딩하며, 검색 전후의 공백을 제거하고 빈 입력을 차단한다. 한글 조합 중 Enter는 제출하지 않는다. 새 탭은 `noopener,noreferrer`, 대체 링크는 `rel="noopener noreferrer"`와 `referrerpolicy="no-referrer"`를 사용한다. 새 탭이 차단되면 ‘검색 결과 직접 열기 ↗’를 사용할 수 있다. `window.open`의 null 반환만으로 차단됐다고 단정하지 않는다.
+
+검색어 입력값만 전송하며 원문·필기·출전은 읽어 전송하지 않는다. 저장 키·카드·주석 스키마·DB 코드는 변경하지 않았다. API 키, 서버, 스크래핑, 인증 변경을 추가하지 않았다.
+
+검수: Windows Edge 임시 프로필에서 `node tools/test-dictionary.cjs` 9개 및 기존 `node tools/test-reader.cjs` 28개 통과. 빈 입력, 공백, 두 사전과 Enter, 예약 문자 인코딩, 팝업 차단·예외 및 대체 링크, 한글 조합, 검색어 외 정보 전송 방지, 데이터 무변경, 1440×1050·390×844 화면을 확인했다. 사전 이동 자동 검사는 외부 응답을 대체한 테스트와 실제 사전 접속 검사를 분리했다. 실제 두 사전의 지정 검색 주소는 HTTP 200이었으며 우리말샘 ‘성리’ 결과에서 `性理`를 확인했다. 웹 읽기 도구는 두 주소를 열지 못했으나 실제 Edge에서는 접속됐다. 사전 서비스의 향후 가용성이나 팝업 정책은 앱이 보장하지 않는다.
+
+이번 변경 파일: `reader-console.js`, `reader-console.css`, `tools/test-dictionary.cjs`, `REVIEW.md`. 화면 캡처와 검사 결과는 `test-results/`에만 보관하며 커밋하지 않는다. 이 항목의 작성 시점에는 main 병합·공개 배포를 하지 않았다.

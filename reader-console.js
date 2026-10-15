@@ -1,5 +1,33 @@
 // Injected inside the original app closure by index.html. No network services.
 // These function declarations replace the earlier versions without changing DB keys.
+// Dictionary navigation is independent of entries and never includes captured notes.
+document.querySelector('main').insertAdjacentHTML('afterbegin',`
+<section class="dictionary-panel" aria-labelledby="dictionaryTitle">
+ <h2 id="dictionaryTitle">개념어의 한자·뜻 찾기</h2>
+ <p id="dictionaryHelp">한글 개념어를 공식 사전에서 찾아보세요. 같은 소리의 말도 한자가 다를 수 있으니 뜻과 용례를 확인해 선택하세요.</p>
+ <form id="dictionaryForm" class="dictionary-form">
+  <label for="dictionaryTerm">한글 개념어<input id="dictionaryTerm" type="search" placeholder="예: 성리, 사상" autocomplete="off" aria-required="true" aria-describedby="dictionaryHelp dictionaryStatus"></label>
+  <label for="dictionaryProvider">검색할 사전<select id="dictionaryProvider"><option value="stdict">표준국어대사전</option><option value="opendict">우리말샘</option></select></label>
+  <button class="btn primary" id="dictionarySearch" type="submit">사전 검색 ↗</button>
+ </form>
+ <p class="dictionary-help">검색어만 외부 사전의 새 탭으로 전달합니다. 원문·필기는 보내지 않으며, 결과는 사전 사이트에서 확인합니다.</p>
+ <p id="dictionaryStatus" role="status" aria-live="polite"></p>
+ <a id="dictionaryResultLink" class="dictionary-result" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" hidden>검색 결과 직접 열기 ↗</a>
+</section>`);
+document.getElementById('dictionaryTerm').addEventListener('keydown',event=>{if(event.key==='Enter'&&event.isComposing)event.preventDefault()});
+document.getElementById('dictionaryForm').addEventListener('submit',event=>{
+ event.preventDefault();
+ const input=document.getElementById('dictionaryTerm'),term=input.value.trim(),status=document.getElementById('dictionaryStatus'),link=document.getElementById('dictionaryResultLink');
+ if(!term){input.setAttribute('aria-invalid','true');status.textContent='찾을 한글 개념어를 입력해 주세요.';link.hidden=true;input.focus();return}
+ input.removeAttribute('aria-invalid');
+ const provider=document.getElementById('dictionaryProvider').value;
+ const url=new URL(provider==='opendict'?'https://opendict.korean.go.kr/search/searchResult':'https://stdict.korean.go.kr/search/searchResult.do');
+ url.search=new URLSearchParams(provider==='opendict'?{query:term}:{pageSize:'10',searchKeyword:term}).toString();
+ link.href=url.href;link.hidden=false;
+ status.textContent='새 탭이 열리지 않았다면 아래 ‘검색 결과 직접 열기’를 눌러 주세요.';
+ // noopener may return null even when a tab opens; do not misreport that as blocking.
+ try{window.open(url.href,'_blank','noopener,noreferrer')}catch{status.textContent='새 탭을 열지 못했습니다. 아래 ‘검색 결과 직접 열기’를 이용해 주세요.'}
+});
 function clean(r){
  const rec={...r};
  rec.id=(typeof r.id==='string'||typeof r.id==='number')?String(r.id):makeId();
